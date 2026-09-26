@@ -13,6 +13,8 @@ const TREE_OPEN_STORAGE_KEY = 'mobilewright-codegen-tree-open'
 
 const COPIED_FEEDBACK_MS = 1500
 
+const ERROR_TOAST_MS = 5000
+
 const GESTURE_NAMES = { tap: 'Tap', doubleTap: 'Double tap', longPress: 'Long press' }
 
 // The Inspector hides its detail pane on every refresh, which continuous refresh would do constantly,
@@ -71,7 +73,8 @@ function insertBeforeTestBodyEnd(source, line) {
 class Recorder {
   #editor = document.getElementById('code-editor')
   #recordBtn = document.getElementById('record-btn')
-  #statusBar = document.getElementById('status-bar')
+  #errorToast = document.getElementById('error-toast')
+  #errorToastTimer = null
   // Every control above the device screen, and the subset that are hardware buttons.
   #deviceControls = [...document.querySelectorAll('.device-btn')]
   #hardwareButtons = [...document.querySelectorAll('.device-btn[data-button]')]
@@ -80,9 +83,14 @@ class Recorder {
   #copyBtn = document.getElementById('copy-btn')
   #treePane = document.getElementById('tree-pane')
   #geoForm = document.getElementById('geo-popover')
+  #urlForm = document.getElementById('url-popover')
+  #fillForm = document.getElementById('fill-popover')
+  #fillBtn = document.getElementById('fill-btn')
   #detailPane = new DetailPane()
-  #gestureButtons = [...document.querySelectorAll('.gesture-btn')]
+  #gestureButtons = [...document.querySelectorAll('.gesture-btn[data-gesture]')]
   #detailElement = null
+  // The element Fill was clicked for; kept apart since a refresh can change the detail element meanwhile.
+  #fillElement = null
   #viewTree
   #isRecording = true
   #clickMode = 'tap'
@@ -157,6 +165,17 @@ class Recorder {
     document.getElementById('geo-reset-btn').addEventListener('click', () => {
       this.#setGeolocation(null, 'await device.setGeolocation(null);')
     })
+    this.#urlForm.addEventListener('submit', e => {
+      e.preventDefault()
+      this.#openUrl(this.#urlForm.elements.url.value.trim())
+    })
+    this.#fillForm.addEventListener('submit', e => {
+      e.preventDefault()
+      this.#fill(this.#fillElement, this.#fillForm.elements.text.value)
+    })
+    this.#fillBtn.addEventListener('click', () => {
+      this.#fillElement = this.#detailElement
+    })
   }
 
   // Same outcome whether the element was clicked on the screenshot or in the view tree.
@@ -208,6 +227,24 @@ class Recorder {
     for (const btn of this.#gestureButtons) {
       btn.disabled = !hasArea(el)
     }
+    // The screen has no typing API, so fill can only be recorded by locator.
+    this.#fillBtn.disabled = !hasArea(el) || !hasRecordableLocator(el)
+  }
+
+  async #openUrl(url) {
+    this.#urlForm.hidePopover()
+    await this.#perform('Open URL', '/api/open-url', { url }, `await device.openUrl('${escQ(url)}');`)
+  }
+
+  // Taps, clears and types at the element's center, the same steps locator.fill() takes.
+  async #fill(el, text) {
+    this.#fillForm.hidePopover()
+    this.#fillForm.reset()
+    if (!el || !hasArea(el) || !hasRecordableLocator(el)) {
+      return
+    }
+    const code = `await screen.${locatorCode(el)}.fill('${escQ(text)}');`
+    await this.#perform('Fill', '/api/fill', { ...centerOf(el.bounds), text }, code)
   }
 
   async #setGeolocation(geolocation, codeLine) {
@@ -220,8 +257,7 @@ class Recorder {
     try {
       await navigator.clipboard.writeText(this.#editor.value)
     } catch (err) {
-      this.#statusBar.textContent = `Copy failed: ${err.message}`
-      this.#statusBar.className = 'error'
+      this.#showError(`Copy failed: ${err.message}`)
       return
     }
     icon.classList.replace('codicon-files', 'codicon-check')
@@ -249,6 +285,15 @@ class Recorder {
       btn.setAttribute('aria-pressed', String(btn.dataset.mode === clickMode))
     }
     document.body.dataset.clickMode = clickMode
+  }
+
+  #showError(message) {
+    this.#errorToast.textContent = message
+    this.#errorToast.hidden = false
+    clearTimeout(this.#errorToastTimer)
+    this.#errorToastTimer = setTimeout(() => {
+      this.#errorToast.hidden = true
+    }, ERROR_TOAST_MS)
   }
 
   #appendLine(codeLine) {
@@ -282,8 +327,7 @@ class Recorder {
         throw new Error(err.error ?? res.statusText)
       }
     } catch (err) {
-      this.#statusBar.textContent = `${actionName} failed: ${err.message}`
-      this.#statusBar.className = 'error'
+      this.#showError(`${actionName} failed: ${err.message}`)
       return
     }
     if (this.#isRecording) {
