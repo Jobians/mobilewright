@@ -376,7 +376,7 @@ All options:
 | `deviceId` | `string` | Explicit device UDID (optional) |
 | `deviceName` | `RegExp` | RegExp to match device name (optional) |
 | `installApps` | `string \| string[]` | App paths (APK/IPA) to install before launching (optional) |
-| `autoAppLaunch` | `boolean` | Automatically launch the app after connecting. Default: `true` |
+| `autoAppLaunch` | `boolean` | Terminate and launch the app (`bundleId`) before each test. Default: `true` |
 | `viewTree` | `'on-failure' \| 'off'` | Attach the accessibility tree as JSON to the report on failure. Default: `'off'` |
 | `timeout` | `number` | Per-test timeout in ms (optional) |
 | `globalTimeout` | `number` | Hard cap on the entire test suite run in ms (optional) |
@@ -453,7 +453,7 @@ The `device` fixture connects once per worker (reading from `mobilewright.config
 | `deviceId` | `string` | Specific device identifier (local drivers only) |
 | `deviceName` | `RegExp` | RegExp to match the device name |
 | `installApps` | `string \| string[]` | App paths (APK/IPA) to install before the tests run |
-| `autoAppLaunch` | `boolean` | Launch the app automatically before each test. Default: `true` |
+| `autoAppLaunch` | `boolean` | Terminate and launch the app (`bundleId`) before each test. Default: `true` |
 | `viewTree` | `'on-failure' \| 'off'` | Attach the accessibility tree as JSON when a test fails. Default: `'off'` |
 | `video` | `'on' \| 'retain-on-failure' \| 'off'` | Record video — always, only on failure, or never. Default: `'off'` |
 
