@@ -98,7 +98,7 @@ export interface MobilewrightConfig {
   bundleId?: string;
   /** App paths (APK/IPA) to install on the device before launching. */
   installApps?: string | string[];
-  /** Terminate and launch the app (bundleId) before each test. Default: true. */
+  /** Automatically launch the app after connecting. Default: true. */
   autoAppLaunch?: boolean;
   /** Uninstall the app (bundleId) and reinstall installApps before each test attempt. Default: false. */
   reinstallApp?: boolean;

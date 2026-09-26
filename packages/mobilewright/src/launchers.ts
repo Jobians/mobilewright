@@ -80,11 +80,6 @@ export async function installAndLaunchApps(device: Device, opts: LaunchOptions):
     await device.installApp(appPath);
   }
   if (opts.bundleId && opts.autoAppLaunch !== false) {
-    try {
-      await device.terminateApp(opts.bundleId);
-    } catch {
-      // app may not be running
-    }
     await device.launchApp(opts.bundleId);
   }
 }
