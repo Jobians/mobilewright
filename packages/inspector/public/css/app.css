@@ -960,6 +960,19 @@ main {
 
 .popover-hint code { font-family: 'SF Mono', Menlo, Monaco, monospace; }
 
+/* Side-by-side labeled inputs, each label stacked above its input. */
+.popover-fields {
+  display: flex;
+  gap: 12px;
+}
+
+.popover-fields label {
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
 .popover-actions {
   display: flex;
   justify-content: space-between;

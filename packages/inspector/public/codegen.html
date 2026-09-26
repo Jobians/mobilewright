@@ -67,9 +67,16 @@
           <button type="submit" class="tool-btn popover-submit-btn">Fill</button>
         </div>
       </form>
-      <form id="geo-popover" class="action-popover" popover aria-label="Set location">
-        <label>Latitude <input name="latitude" autofocus type="number" step="any" min="-90" max="90" placeholder="-17.833" required /></label>
-        <label>Longitude <input name="longitude" type="number" step="any" min="-180" max="180" placeholder="177.947" required /></label>
+      <form id="geo-popover" class="action-popover wide-popover" popover aria-labelledby="geo-popover-title">
+        <div class="popover-header">
+          <h2 id="geo-popover-title">Set location</h2>
+          <button type="button" class="popover-close" popovertarget="geo-popover" popovertargetaction="hide" aria-label="Close">&times;</button>
+        </div>
+        <p class="popover-hint">Moves the device's GPS to these coordinates and records <code>device.setGeolocation()</code>.</p>
+        <div class="popover-fields">
+          <label>Latitude <input name="latitude" autofocus type="number" step="any" min="-90" max="90" placeholder="-17.833" required /></label>
+          <label>Longitude <input name="longitude" type="number" step="any" min="-180" max="180" placeholder="177.947" required /></label>
+        </div>
         <div class="popover-actions">
           <button type="button" id="geo-reset-btn" class="tool-btn">Reset location</button>
           <button type="submit" class="tool-btn popover-submit-btn">Set</button>
