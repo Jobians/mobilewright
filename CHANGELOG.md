@@ -1,3 +1,10 @@
+## [0.0.61] (2026-09-26)
+* Feat: add `mobilewright codegen`, a browser UI that records taps and assertions on a live device screenshot into a test ([#346](https://github.com/mobile-next/mobilewright/pull/346))
+* Feat: `autoAppLaunch` terminates the app before launching it in the standalone launcher, matching the test fixture ([#347](https://github.com/mobile-next/mobilewright/pull/347))
+* Fix(Android): `getByTestId()` matches short resource-ids such as `password_field`, not only `com.example.app:id/password_field` ([#344](https://github.com/mobile-next/mobilewright/pull/344))
+* Fix: plain-value `expect()` assertions are reported as a step in the reporter ([#340](https://github.com/mobile-next/mobilewright/pull/340)), thanks to [@marcomaes](https://github.com/marcomaes)
+* Docs: mark Flutter as supported ([#336](https://github.com/mobile-next/mobilewright/pull/336))
+
 ## [0.0.60] (2026-09-21)
 * Feat: `getByRole()` accepts `progressbar`, `alert` and `combobox` ([#332](https://github.com/mobile-next/mobilewright/pull/332))
 * Feat: `Role` type is exported from `mobilewright` and `@mobilewright/test` ([#333](https://github.com/mobile-next/mobilewright/pull/333))
