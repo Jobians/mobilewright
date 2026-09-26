@@ -12,6 +12,7 @@ import {
   type DevicePoolClient,
   type AllocationCriteria,
   type AllocationHandle,
+  terminateAppIfRunning,
 } from 'mobilewright';
 import { expect, setSoftFailureHandler, setDefaultStepFn } from '@mobilewright/core';
 import type { Device, Screen, StepFn } from '@mobilewright/core';
@@ -166,11 +167,7 @@ export const test = base.extend<MobilewrightTestFixtures>({
       }
 
       if (bundleId && autoAppLaunch !== false) {
-        try {
-          await device.terminateApp(bundleId);
-        } catch {
-          // app may not be running
-        }
+        await terminateAppIfRunning(device, bundleId);
         await device.launchApp(bundleId);
       }
 

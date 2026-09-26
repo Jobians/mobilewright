@@ -80,7 +80,24 @@ export async function installAndLaunchApps(device: Device, opts: LaunchOptions):
     await device.installApp(appPath);
   }
   if (opts.bundleId && opts.autoAppLaunch !== false) {
+    await terminateAppIfRunning(device, opts.bundleId);
     await device.launchApp(opts.bundleId);
+  }
+}
+
+/**
+ * Terminates the app so a launch starts a fresh process. Only a physical iOS device reports a
+ * not-running app as an error ("process of <bundleId> not found"); Android and the simulator
+ * succeed silently. Any other failure, such as the app not being installed, is rethrown.
+ */
+export async function terminateAppIfRunning(device: Pick<Device, 'terminateApp'>, bundleId: string): Promise<void> {
+  try {
+    await device.terminateApp(bundleId);
+  } catch (error) {
+    const isNotRunning = error instanceof Error && error.message.includes(`process of ${bundleId} not found`);
+    if (!isNotRunning) {
+      throw error;
+    }
   }
 }
 
