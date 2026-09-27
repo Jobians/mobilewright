@@ -65,6 +65,7 @@ interface MobilecliElement {
   name?: string;
   value?: string;
   identifier?: string;
+  key?: string;
   placeholder?: string;
   rect?: { x: number; y: number; width: number; height: number };
   children?: MobilecliElement[];
@@ -165,6 +166,7 @@ function elementToViewNode(el: MobilecliElement): ViewNode {
     type: el.type ?? 'Unknown',
     label: el.label || undefined,
     identifier: el.identifier || undefined,
+    key: el.key || undefined,
     value: el.value || undefined,
     text: el.text || undefined,
     placeholder: el.placeholder || undefined,

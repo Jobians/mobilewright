@@ -122,6 +122,9 @@ function matchesStrategy(
         : node.label === strategy.value;
 
     case 'testId':
+      if (node.key === strategy.value) {
+        return true;
+      }
       if (node.identifier === strategy.value) {
         return true;
       }
