@@ -35,6 +35,24 @@ npm run test:coverage
 
 The repo is an npm workspace; packages live under `packages/*`.
 
+### Trying your changes in another project
+
+To run another project's tests against this checkout instead of the published release:
+
+```bash
+npm run use-local -- ~/path/to/your-project
+```
+
+This builds and packs every package, then points the project's `package.json` at the local tarballs and runs `npm install`. The project's `package.json` and `package-lock.json` must be committed with no local changes. To go back to the published release:
+
+```bash
+cd ~/path/to/your-project
+git checkout package.json package-lock.json
+npm install
+```
+
+To pick up further changes, go back to the release first, then run `use-local` again.
+
 ## Submitting changes
 
 - Branch off `main` and open a pull request when ready.

@@ -16,7 +16,8 @@
     "example": "npm run build && tsx",
     "test": "playwright test --config=tests/mobilewright.config.ts",
     "test:coverage": "npx c8 --include 'packages/*/src/**/*.ts' --exclude '**/*.test.ts' playwright test --config=tests/mobilewright.config.ts",
-    "lint": "tsc --noEmit && eslint ."
+    "lint": "tsc --noEmit && eslint .",
+    "use-local": "node scripts/use-local.mjs"
   },
   "devDependencies": {
     "@mobilewright/test": "*",
