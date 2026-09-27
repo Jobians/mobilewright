@@ -69,6 +69,10 @@ function textOf(el) {
   return String(el.text ?? el.label ?? el.value ?? '')
 }
 
+function canFill(el) {
+  return el.isEditable && hasArea(el) && hasRecordableLocator(el)
+}
+
 function hasArea(el) {
   return Boolean(el.bounds && el.bounds.width > 0 && el.bounds.height > 0)
 }
@@ -274,8 +278,8 @@ class Recorder {
     for (const btn of this.#gestureButtons) {
       btn.disabled = !hasArea(el)
     }
-    // The screen has no typing API, so fill can only be recorded by locator.
-    this.#fillBtn.disabled = !hasArea(el) || !hasRecordableLocator(el)
+    // Only text fields can be filled, and the screen has no typing API, so fill is recorded by locator.
+    this.#fillBtn.disabled = !canFill(el)
   }
 
   async #openUrl(url) {
@@ -287,7 +291,7 @@ class Recorder {
   async #fill(el, text) {
     this.#fillForm.hidePopover()
     this.#fillForm.reset()
-    if (!el || !hasArea(el) || !hasRecordableLocator(el)) {
+    if (!el || !canFill(el)) {
       return
     }
     const code = `await screen.${locatorCode(el)}.fill('${escQ(text)}');`

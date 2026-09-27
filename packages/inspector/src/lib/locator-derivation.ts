@@ -30,6 +30,11 @@ export interface ElementEntry {
   depth: number;
 }
 
+/** Whether text can be typed into the node: the same types getByRole('textfield') matches. */
+export function isEditable(node: ViewNode): boolean {
+  return (ROLE_TYPE_MAP.textfield as readonly string[]).includes(bareTypeName(node.type ?? ''));
+}
+
 /** Map node.type to a mobilewright role string. Returns null for unmapped types. */
 function deriveRole(node: ViewNode): string | null {
   // Same normalization core applies before matching: strips the Android package
