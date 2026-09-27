@@ -181,7 +181,8 @@ header h1 {
 
 #device-picker select,
 #auto-refresh-interval,
-#theme-select {
+#theme-select,
+#target-select {
   background: var(--c-bg);
   color: var(--c-text);
   border: 1px solid var(--c-border);
@@ -194,7 +195,8 @@ header h1 {
 
 #device-picker select:focus,
 #auto-refresh-interval:focus,
-#theme-select:focus {
+#theme-select:focus,
+#target-select:focus {
   border-color: var(--c-accent);
 }
 
@@ -810,6 +812,14 @@ main {
   stroke: var(--c-selected);
 }
 #record-btn[aria-pressed="true"] .codicon { color: var(--c-status-error); }
+
+#target-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
 
 .tool-separator {
   width: 1px;

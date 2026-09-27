@@ -1,15 +1,38 @@
 import { DetailPane, Inspector, ScreenshotPane, applyTheme, escQ, locatorCode, makeResizable } from './app.js'
 import { ViewTreePane } from './view-tree.js'
 
-const INITIAL_SOURCE = `import { test, expect } from '@mobilewright/test';
+// What the generated code runs under: the @mobilewright/test runner, or a plain script using the library.
+// Recorded lines are the same for both, since each exposes `device` and `screen`; only the wrapper differs.
+const TARGETS = {
+  test: {
+    render: (platform, body) => `import { test, expect } from '@mobilewright/test';
 
 test('test', async ({ device, screen }) => {
-});
-`
+${body}});
+`,
+    bodyEnd: '});',
+    indent: '  ',
+  },
+  library: {
+    render: (platform, body) => `import { ${platform}, expect } from 'mobilewright';
 
-const TEST_BODY_END = '});'
+const device = await ${platform}.launch();
+const { screen } = device;
+
+${body}await device.close();
+`,
+    bodyEnd: 'await device.close();',
+    indent: '',
+  },
+}
+
+const DEFAULT_TARGET = 'test'
+
+const DEFAULT_PLATFORM = 'ios'
 
 const TREE_OPEN_STORAGE_KEY = 'mobilewright-codegen-tree-open'
+
+const TARGET_STORAGE_KEY = 'mobilewright-codegen-target'
 
 const COPIED_FEEDBACK_MS = 1500
 
@@ -50,6 +73,20 @@ function hasArea(el) {
   return Boolean(el.bounds && el.bounds.width > 0 && el.bounds.height > 0)
 }
 
+function readTarget() {
+  try {
+    const target = localStorage.getItem(TARGET_STORAGE_KEY)
+    return target in TARGETS ? target : DEFAULT_TARGET
+  } catch {
+    return DEFAULT_TARGET
+  }
+}
+
+function renderSource(target, platform, lines) {
+  const { render, indent } = TARGETS[target]
+  return render(platform, lines.map(line => `${indent}${line}\n`).join(''))
+}
+
 function readTreeOpen() {
   try {
     return localStorage.getItem(TREE_OPEN_STORAGE_KEY) === 'true'
@@ -62,8 +99,8 @@ function centerOf({ x, y, width, height }) {
   return { x: Math.round(x + width / 2), y: Math.round(y + height / 2) }
 }
 
-function insertBeforeTestBodyEnd(source, line) {
-  const end = source.lastIndexOf(TEST_BODY_END)
+function insertBeforeBodyEnd(source, bodyEnd, line) {
+  const end = source.lastIndexOf(bodyEnd)
   if (end === -1) {
     return source + line + '\n'
   }
@@ -95,6 +132,11 @@ class Recorder {
   #isRecording = true
   #clickMode = 'tap'
   #inspector
+  #targetSelect = document.getElementById('target-select')
+  #target = readTarget()
+  #platform = DEFAULT_PLATFORM
+  // Every recorded line, so switching target can rebuild the source around them.
+  #lines = []
 
   constructor() {
     const screenshotPane = new ScreenshotPane({ showAllHighlights: false })
@@ -104,10 +146,15 @@ class Recorder {
       screenshotPane,
       elementsPane: viewTree,
       detailPane: noDetailPane,
-      onActiveDeviceChange: device => this.#enableDeviceControlsFor(device),
+      onActiveDeviceChange: device => {
+        this.#enableDeviceControlsFor(device)
+        this.#setPlatform(device?.platform ?? this.#platform)
+      },
       continuousRefresh: true,
     })
-    this.#editor.value = INITIAL_SOURCE
+    this.#targetSelect.value = this.#target
+    this.#renderSource()
+    this.#targetSelect.addEventListener('change', () => this.#setTarget(this.#targetSelect.value))
     this.#recordBtn.addEventListener('click', () => this.#setRecording(!this.#isRecording))
     for (const btn of this.#assertButtons) {
       btn.addEventListener('click', () => this.#setClickMode(this.#clickMode === btn.dataset.mode ? 'tap' : btn.dataset.mode))
@@ -296,8 +343,37 @@ class Recorder {
     }, ERROR_TOAST_MS)
   }
 
+  // Inserted into the editor rather than re-rendered, so edits made by hand are kept.
   #appendLine(codeLine) {
-    this.#editor.value = insertBeforeTestBodyEnd(this.#editor.value, `  ${codeLine}`)
+    const { bodyEnd, indent } = TARGETS[this.#target]
+    this.#lines.push(codeLine)
+    this.#editor.value = insertBeforeBodyEnd(this.#editor.value, bodyEnd, `${indent}${codeLine}`)
+  }
+
+  // Rebuilds the whole source from the recorded lines; edits made by hand are lost.
+  #renderSource() {
+    this.#editor.value = renderSource(this.#target, this.#platform, this.#lines)
+  }
+
+  #setTarget(target) {
+    this.#target = target
+    try {
+      localStorage.setItem(TARGET_STORAGE_KEY, target)
+    } catch {
+      // storage unavailable (private mode); the choice still applies to this page
+    }
+    this.#renderSource()
+  }
+
+  // The library script launches by platform, so its source follows the selected device.
+  #setPlatform(platform) {
+    if (platform === this.#platform) {
+      return
+    }
+    this.#platform = platform
+    if (this.#target === 'library') {
+      this.#renderSource()
+    }
   }
 
   #setRecording(isRecording) {
