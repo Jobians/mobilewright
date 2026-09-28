@@ -11,6 +11,8 @@ export interface ViewNode {
   type: string;
   label?: string;
   identifier?: string;
+  /** Flutter widget Key('...') (debug builds only) */
+  key?: string;
   /** Full Android resource-id (e.g. "com.example:id/login_button") */
   resourceId?: string;
   value?: string;

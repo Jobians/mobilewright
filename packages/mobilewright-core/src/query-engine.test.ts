@@ -84,6 +84,18 @@ test.describe('queryAll', () => {
     expect(results[0].identifier).toBe('loginButton');
   });
 
+  test('finds by testId via flutter widget key before falling back to identifier', () => {
+    const flutterTree = [
+      node({ type: 'Button', key: 'key-only-button' }),
+      node({ type: 'Button', key: 'different-key-button', identifier: 'semantics-id-button' }),
+    ];
+    const findByTestId = (value: string) => queryAll(flutterTree, { kind: 'testId', value });
+
+    expect(findByTestId('key-only-button')).toHaveLength(1);
+    expect(findByTestId('different-key-button')[0].identifier).toBe('semantics-id-button');
+    expect(findByTestId('semantics-id-button')[0].key).toBe('different-key-button');
+  });
+
   test('finds by testId', () => {
     const results = queryAll(sampleTree, {
       kind: 'testId',

@@ -66,7 +66,7 @@ function deriveRole(node: ViewNode): string | null {
 export function deriveLocators(node: ViewNode): Locator[] {
   const locators: Locator[] = [];
 
-  const testId = node.identifier || node.resourceId;
+  const testId = node.key || node.identifier || node.resourceId;
   if (testId) locators.push({ kind: 'testId', value: testId });
 
   const role = deriveRole(node);
