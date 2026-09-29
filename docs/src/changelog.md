@@ -7,6 +7,17 @@ hide_table_of_contents: true
 
 # Changelog
 
+## [0.0.62] (2026-09-29)
+* Feat: add `device.setFoldState()` to fold and unfold foldable iOS simulators and Android emulators, by state or hinge angle ([#354](https://github.com/mobile-next/mobilewright/pull/354))
+* Feat(Flutter): `getByTestId()` matches widget keys such as `Key('login-button')` in debug builds ([#353](https://github.com/mobile-next/mobilewright/pull/353))
+* Feat(codegen): record open URL and fill actions, and show failed actions in a toast ([#349](https://github.com/mobile-next/mobilewright/pull/349))
+* Feat: slider, text field and switch state is reported consistently on Android and iOS ([mobilecli#455](https://github.com/mobile-next/mobilecli/pull/455))
+* Fix(iOS): tap, swipe, gestures, screenshots and view tree frames on folded and unfolded foldable simulators ([devicekit-ios#82](https://github.com/mobile-next/devicekit-ios/pull/82), [devicekit-ios#88](https://github.com/mobile-next/devicekit-ios/pull/88), [devicekit-ios#89](https://github.com/mobile-next/devicekit-ios/pull/89))
+* Fix(iOS): tap and swipe coordinates are mapped correctly in landscape ([devicekit-ios#83](https://github.com/mobile-next/devicekit-ios/pull/83)), thanks to [@hakanor](https://github.com/hakanor)
+* Fix(iOS): view tree frames are no longer offset when the app is rotated to landscape ([devicekit-ios#86](https://github.com/mobile-next/devicekit-ios/pull/86))
+* Fix(iOS): background the test runner on iOS 27 simulators ([devicekit-ios#84](https://github.com/mobile-next/devicekit-ios/pull/84))
+* Chore: upgrade bundled mobilecli to 1.0.16 ([#353](https://github.com/mobile-next/mobilewright/pull/353), [#355](https://github.com/mobile-next/mobilewright/pull/355))
+
 ## [0.0.61] (2026-09-26)
 * Feat: add `mobilewright codegen`, a browser UI that records taps and assertions on a live device screenshot into a test ([#346](https://github.com/mobile-next/mobilewright/pull/346))
 * Feat: `autoAppLaunch` terminates the app before launching it in the standalone launcher, matching the test fixture ([#347](https://github.com/mobile-next/mobilewright/pull/347))
