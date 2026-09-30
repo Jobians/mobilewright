@@ -508,3 +508,33 @@ test.describe('WebLocator step instrumentation', () => {
     playwrightExpect(titles).toEqual([]);
   });
 });
+
+// ─── expect() on an element that is not in the DOM yet ───────
+// The injected evaluate resolves to null when the selector matches nothing.
+
+test.describe('_expect on a missing element', () => {
+  const NO_ELEMENT = null;
+
+  test('toBeVisible keeps polling until the element appears', async () => {
+    const { session, evaluateCalls } = sessionReturning(NO_ELEMENT, NO_ELEMENT, { matches: true });
+    const loc = new WebLocator(session, '.not-in-the-dom-yet');
+    const result = await loc._expect('to.be.visible', { timeout: 5_000 });
+    playwrightExpect(result).toMatchObject({ matches: true, timedOut: false });
+    playwrightExpect(evaluateCalls).toHaveLength(3);
+  });
+
+  test('toBeVisible times out when the element never appears', async () => {
+    const { session } = sessionAlwaysReturning(NO_ELEMENT);
+    const loc = new WebLocator(session, '.never-there');
+    const result = await loc._expect('to.be.visible', { timeout: 200 });
+    playwrightExpect(result).toMatchObject({ matches: false, timedOut: true });
+  });
+
+  test('toBeHidden passes immediately', async () => {
+    const { session, evaluateCalls } = sessionAlwaysReturning(NO_ELEMENT);
+    const loc = new WebLocator(session, '.never-there');
+    const result = await loc._expect('to.be.hidden', { timeout: 5_000 });
+    playwrightExpect(result).toMatchObject({ matches: true, timedOut: false });
+    playwrightExpect(evaluateCalls).toHaveLength(1);
+  });
+});
