@@ -16,7 +16,7 @@ import {
   TEST_ID_ATTR,
   evaluateWithEngine,
 } from './playwright-engine.js';
-import { buildExpectEvaluate, type FrameExpectParams, type ExpectResult, type ExpectedTextValue } from './web-expect-matcher.js';
+import { buildExpectEvaluate, missingElementVerdict, type FrameExpectParams, type ExpectResult, type ExpectedTextValue } from './web-expect-matcher.js';
 
 const DEFAULT_TIMEOUT = 5_000;
 const EXPECT_POLL_INTERVAL = 100;
@@ -401,7 +401,8 @@ export class MobileWebViewLocator {
   // return its raw verdict. The assertion layer (expect.ts) decides pass/fail
   // (pass = matches !== isNot) and handles retry/negation/messages.
   async _runInjectedExpect(params: FrameExpectParams): Promise<ExpectResult> {
-    return this.evalEngine<ExpectResult>(buildExpectEvaluate(this.selector, params));
+    const verdict = await this.evalEngine<ExpectResult | null>(buildExpectEvaluate(this.selector, params));
+    return verdict ?? missingElementVerdict(params);
   }
 
   // The private hook Playwright's web-first matchers call: expect(locator).toBeX()
