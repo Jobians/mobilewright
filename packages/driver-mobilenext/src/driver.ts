@@ -260,6 +260,9 @@ export class MobileNextDriver implements MobilewrightSession, DeviceAllocator {
     }
 
     const baseUrl = config.url ?? DEFAULT_URL;
+    if (this.options.apiKey && !baseUrl.startsWith('wss://')) {
+      throw new Error(`MobileNextDriver url must use wss when apiKey is set, got: ${baseUrl}`);
+    }
     const url = this.options.apiKey
       ? appendQueryParam(baseUrl, 'token', this.options.apiKey)
       : baseUrl;

@@ -24,6 +24,11 @@ test('falls back to MOBILENEXT_API_KEY when apiKey is not provided', () => {
   });
 });
 
+test('refuses to send the api key over an insecure websocket url', async () => {
+  const driver = new MobileNextDriver({ apiKey: 'mob_key', testResult: { uploadReport: 'off' } });
+  await expect(driver.connect({ platform: 'ios', deviceId: 'abc', url: 'ws://localhost:1234/ws' })).rejects.toThrow(/must use wss/);
+});
+
 test('explicit apiKey overrides MOBILENEXT_API_KEY', () => {
   withApiKeyEnv('mob_from_env', () => {
     expect(() => new MobileNextDriver({ apiKey: '', apiUrl: INSECURE_URL, testResult: { uploadReport: 'off' } })).not.toThrow();
