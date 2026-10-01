@@ -7,6 +7,21 @@ hide_table_of_contents: true
 
 # Changelog
 
+## [0.0.63] (2026-10-01)
+* Feat(driver-mobilenext): `apiKey` defaults to the `MOBILENEXT_API_KEY` environment variable ([#359](https://github.com/mobile-next/mobilewright/pull/359))
+* Feat(iOS): listen on multiple addresses, including IPv6, in `DEVICEKIT_LISTEN_HOST` ([devicekit-ios#92](https://github.com/mobile-next/devicekit-ios/pull/92)), thanks to [@hillct](https://github.com/hillct)
+* Fix: webview `expect()` keeps polling when the element is not in the DOM yet ([#358](https://github.com/mobile-next/mobilewright/pull/358))
+* Fix: no more orphan mobilecli server, signals are forwarded to the binary ([mobilecli#475](https://github.com/mobile-next/mobilecli/pull/475))
+* Fix(iOS): webview evaluate no longer crashes the app on a non-JSON result ([mobilecli#473](https://github.com/mobile-next/mobilecli/pull/473))
+* Fix(iOS): report the unfolded screen size on foldable simulators ([devicekit-ios#91](https://github.com/mobile-next/devicekit-ios/pull/91))
+* Fix(iOS): landscape screenshots are rotated in the pixels, not with an EXIF tag ([devicekit-ios#93](https://github.com/mobile-next/devicekit-ios/pull/93))
+* Fix(iOS): fail the test run when the agent server can't start ([devicekit-ios#94](https://github.com/mobile-next/devicekit-ios/pull/94))
+* Fix(iOS): resolve symlinks before the simulator file system sandbox check ([mobilecli#477](https://github.com/mobile-next/mobilecli/pull/477))
+* Fix(Android): keep the whole URL when opening it, values after `&` were missing ([mobilecli#472](https://github.com/mobile-next/mobilecli/pull/472))
+* Fix(Android): stop the device server when idle or when the daemon exits, freeing uiautomator ([mobilecli#476](https://github.com/mobile-next/mobilecli/pull/476))
+* Fix(Android): quote package names passed to adb shell ([mobilecli#471](https://github.com/mobile-next/mobilecli/pull/471))
+* Chore: upgrade bundled mobilecli to 1.0.17 ([#362](https://github.com/mobile-next/mobilewright/pull/362))
+
 ## [0.0.62] (2026-09-29)
 * Feat: add `device.setFoldState()` to fold and unfold foldable iOS simulators and Android emulators, by state or hinge angle ([#354](https://github.com/mobile-next/mobilewright/pull/354))
 * Feat(Flutter): `getByTestId()` matches widget keys such as `Key('login-button')` in debug builds ([#353](https://github.com/mobile-next/mobilewright/pull/353))
