@@ -10,7 +10,7 @@ type FakeDevice = {
   show: (tree: ViewNode[]) => void;
 };
 
-type NodeSpec = { type?: string; identifier?: string; text?: string; label?: string; y?: number };
+type NodeSpec = { type?: string; identifier?: string; text?: string; label?: string; x?: number; y?: number };
 
 // ─── View-tree builders, shaped like mobilecli's Android dump ───────────
 
@@ -24,7 +24,7 @@ function node(spec: NodeSpec, children: ViewNode[] = []): ViewNode {
     label: spec.label,
     isVisible: true,
     isEnabled: true,
-    bounds: { x: 0, y: spec.y ?? 0, width: 100, height: 50 },
+    bounds: { x: spec.x ?? 0, y: spec.y ?? 0, width: 100, height: 50 },
     children,
   };
 }
@@ -77,8 +77,8 @@ function locationPermissionDialog(): ViewNode[] {
   ])];
 }
 
-function centerOfButtonAt(y: number): [number, number] {
-  return [50, y + 25];
+function centerOfButtonAt(y: number, x = 0): [number, number] {
+  return [x + 50, y + 25];
 }
 
 // ─── Fake device: shows a tree; a tap on anything but the text field closes a dialog ───
@@ -252,5 +252,114 @@ test.describe('screen.on(dialog)', () => {
     screen.off('dialog', handler);
     await screen.getByText('OK').isVisible();
     expect(events).toBe(0);
+  });
+});
+
+// ─── iOS: view-tree builders, shaped like mobilecli's iOS dump ───────────
+
+function iosButton(label: string, x: number, y: number): ViewNode {
+  return node({ type: 'Button', label, x, y });
+}
+
+function iosAlert(title: string, message: string, children: ViewNode[]): ViewNode[] {
+  return [node({ type: 'Application', label: 'Playground' }, [
+    node({ type: 'Alert', label: title }, [
+      node({ type: 'StaticText', label: title }),
+      node({ type: 'StaticText', label: message }),
+      ...children,
+    ]),
+  ])];
+}
+
+function iosConfirmAlert(): ViewNode[] {
+  return iosAlert('Confirm Alert', 'Do you want to continue?', [iosButton('Cancel', 0, 300), iosButton('OK', 150, 300)]);
+}
+
+function iosThreeButtonAlert(): ViewNode[] {
+  return iosAlert('Three Button Alert', 'Pick one of three options', [
+    iosButton('Yes', 0, 100), iosButton('No', 0, 200), iosButton('Later', 0, 300),
+  ]);
+}
+
+function iosPromptAlert(okButtonY = 300): ViewNode[] {
+  return iosAlert('Prompt Alert', 'What is your name?', [
+    node({ type: 'TextField', y: TEXT_FIELD_Y }),
+    iosButton('Cancel', 0, okButtonY),
+    iosButton('OK', 150, okButtonY),
+  ]);
+}
+
+function iosCameraPermissionAlert(): ViewNode[] {
+  return iosAlert('“Playground” would like to access the Camera.', 'Used to scan codes.', [
+    iosButton('Don’t Allow', 0, 300), iosButton('Allow', 150, 300),
+  ]);
+}
+
+function iosLocationPermissionAlert(): ViewNode[] {
+  return iosAlert('Allow “Playground” to use your location?', 'Used to show your current location on a map.', [
+    iosButton('Allow Once', 0, 100), iosButton('Allow While Using App', 0, 200), iosButton('Don’t Allow', 0, 300),
+  ]);
+}
+
+test.describe('iOS dialogs', () => {
+  test('reads an app confirm alert', async () => {
+    const dialog = await firstDialogSeenBy(new Screen(createFakeDevice(iosConfirmAlert()).driver));
+    expect(dialog.type()).toBe('confirm');
+    expect(dialog.isSystem()).toBe(false);
+    expect(dialog.title()).toBe('Confirm Alert');
+    expect(dialog.message()).toBe('Do you want to continue?');
+    expect(dialog.buttons()).toEqual(['Cancel', 'OK']);
+  });
+
+  test('side-by-side buttons: accept presses the right one, dismiss the left one', async () => {
+    const accepting = createFakeDevice(iosConfirmAlert());
+    await (await firstDialogSeenBy(new Screen(accepting.driver))).accept();
+    expect(accepting.taps).toEqual([centerOfButtonAt(300, 150)]);
+
+    const dismissing = createFakeDevice(iosConfirmAlert());
+    await (await firstDialogSeenBy(new Screen(dismissing.driver))).dismiss();
+    expect(dismissing.taps).toEqual([centerOfButtonAt(300)]);
+  });
+
+  test('stacked buttons: accept presses the top one, dismiss the bottom one', async () => {
+    const accepting = createFakeDevice(iosThreeButtonAlert());
+    await (await firstDialogSeenBy(new Screen(accepting.driver))).accept();
+    expect(accepting.taps).toEqual([centerOfButtonAt(100)]);
+
+    const dismissing = createFakeDevice(iosThreeButtonAlert());
+    await (await firstDialogSeenBy(new Screen(dismissing.driver))).dismiss();
+    expect(dismissing.taps).toEqual([centerOfButtonAt(300)]);
+  });
+
+  test('an alert with a text field is a prompt, and accept types into it', async () => {
+    const device = createFakeDevice(iosPromptAlert());
+    const dialog = await firstDialogSeenBy(new Screen(device.driver));
+    expect(dialog.type()).toBe('prompt');
+    device.show(iosPromptAlert(250));
+    await dialog.accept('Gil');
+    expect(device.typed).toEqual(['Gil']);
+    expect(device.taps.at(-1)).toEqual(centerOfButtonAt(250, 150));
+  });
+
+  test('a camera permission alert is a system permission dialog', async () => {
+    const device = createFakeDevice(iosCameraPermissionAlert());
+    const dialog = await firstDialogSeenBy(new Screen(device.driver));
+    expect(dialog.type()).toBe('permission');
+    expect(dialog.isSystem()).toBe(true);
+    expect(dialog.title()).toBe('“Playground” would like to access the Camera.');
+    await dialog.accept();
+    expect(device.taps).toEqual([centerOfButtonAt(300, 150)]);
+  });
+
+  test('accepting a location permission alert allows while using the app', async () => {
+    const device = createFakeDevice(iosLocationPermissionAlert());
+    await (await firstDialogSeenBy(new Screen(device.driver))).accept();
+    expect(device.taps).toEqual([centerOfButtonAt(200)]);
+  });
+
+  test('dismissing a location permission alert does not allow', async () => {
+    const device = createFakeDevice(iosLocationPermissionAlert());
+    await (await firstDialogSeenBy(new Screen(device.driver))).dismiss();
+    expect(device.taps).toEqual([centerOfButtonAt(300)]);
   });
 });

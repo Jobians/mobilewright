@@ -3,11 +3,11 @@ import type { Device, Screen, Dialog } from 'mobilewright';
 
 const PLAYGROUND_APP = 'com.mobilenext.playground';
 
-test.use({ platform: 'android' });
-
 // ─── Helpers ─────────────────────────────────────────────────────
 
-// clearAppData also resets runtime permissions, so permission prompts show up on every run.
+// On Android, clearAppData also resets runtime permissions, so permission prompts show up on every run.
+// On an iOS simulator it does not: reset them with `xcrun simctl privacy <udid> reset all <bundle>`,
+// and reinstall the app to reset notifications.
 async function openPermissionsAndAlertsWithFreshPermissions(device: Device, screen: Screen): Promise<void> {
   await device.terminateApp(PLAYGROUND_APP).catch(() => {});
   await device.clearAppData(PLAYGROUND_APP);
@@ -16,15 +16,22 @@ async function openPermissionsAndAlertsWithFreshPermissions(device: Device, scre
 }
 
 function alertResult(screen: Screen) {
-  return screen.getByLabel('alert_result');
+  return screen.getByTestId('alert_result');
+}
+
+function deniedStatus(platform: 'ios' | 'android' | undefined): string {
+  return platform === 'ios' ? 'Denied' : 'Not Granted';
 }
 
 function permissionStatus(screen: Screen, permission: 'camera' | 'location' | 'notifications') {
-  return screen.getByLabel(`${permission}_permission_status`);
+  return screen.getByTestId(`${permission}_permission_status`);
 }
 
-async function pressButton(screen: Screen, testLabel: string): Promise<void> {
-  await screen.getByLabel(testLabel).tap();
+async function pressButton(screen: Screen, testId: string): Promise<void> {
+  // the alert buttons sit below the fold on smaller screens, and iOS only lists rendered rows
+  const button = screen.getByTestId(testId);
+  await button.scrollIntoViewIfNeeded();
+  await button.tap();
 }
 
 function recordDialogs(screen: Screen, respond: (dialog: Dialog) => Promise<void>): Dialog[] {
@@ -100,12 +107,12 @@ test('accepting the location prompt grants location', async ({ screen }) => {
   expect(dialogs[0].isSystem()).toBe(true);
 });
 
-test('dismissing the camera prompt denies the camera', async ({ screen }) => {
+test('dismissing the camera prompt denies the camera', async ({ screen, platform }) => {
   const dialogs = recordDialogs(screen, (dialog) => dialog.dismiss());
   await pressButton(screen, 'request_camera_permission_button');
   await waitUntilDialogsSeen(screen, dialogs, 1);
-  await expect(screen.getByText('Don’t allow')).toBeHidden();
-  await expect(permissionStatus(screen, 'camera')).toHaveText('Not Granted');
+  await expect(screen.getByText(/Don’t allow/i)).toBeHidden();
+  await expect(permissionStatus(screen, 'camera')).toHaveText(deniedStatus(platform));
 });
 
 test('accepting the notifications prompt grants notifications', async ({ screen }) => {
