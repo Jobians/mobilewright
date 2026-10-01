@@ -101,6 +101,7 @@ interface MobileNextDevicesResponse {
 }
 
 export interface MobileNextDriverOptions {
+  /** API key for mobilenext. Defaults to the MOBILENEXT_API_KEY environment variable; an explicit value always wins. */
   apiKey?: string;
   /** Fleet API base URL override. Mainly for testing. */
   apiUrl?: string;
@@ -228,7 +229,8 @@ export class MobileNextDriver implements MobilewrightSession, DeviceAllocator {
   /** Test-lifecycle observer that uploads results to mobilenext; undefined when uploading is disabled. */
   readonly observer: TestObserver | undefined;
 
-  constructor(options: MobileNextDriverOptions = {}) {
+  constructor(driverOptions: MobileNextDriverOptions = {}) {
+    const options = { ...driverOptions, apiKey: driverOptions.apiKey ?? process.env.MOBILENEXT_API_KEY };
     if (options.apiKey && options.apiUrl && !options.apiUrl.startsWith('https://')) {
       throw new Error(`MobileNextDriver apiUrl must use https when apiKey is set, got: ${options.apiUrl}`);
     }
@@ -258,6 +260,9 @@ export class MobileNextDriver implements MobilewrightSession, DeviceAllocator {
     }
 
     const baseUrl = config.url ?? DEFAULT_URL;
+    if (this.options.apiKey && !baseUrl.startsWith('wss://')) {
+      throw new Error(`MobileNextDriver url must use wss when apiKey is set, got: ${baseUrl}`);
+    }
     const url = this.options.apiKey
       ? appendQueryParam(baseUrl, 'token', this.options.apiKey)
       : baseUrl;

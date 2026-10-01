@@ -94,7 +94,7 @@ driver: new MobilecliDriver({
 import { MobileNextDriver } from '@mobilewright/driver-mobilenext';
 
 driver: new MobileNextDriver({
-  apiKey: process.env.MOBILENEXT_API_KEY,
+  apiKey: '...',              // default: MOBILENEXT_API_KEY env var; an explicit value wins
   allocationTimeout: 900_000, // wait for a cloud device, ms (default: 15 min)
   uploadTimeout: 60_000,      // upload test results, ms (default: none)
 })
