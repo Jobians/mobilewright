@@ -120,3 +120,22 @@ test('accepting the notifications prompt grants notifications', async ({ screen 
   await pressButton(screen, 'request_notifications_permission_button');
   await expect(permissionStatus(screen, 'notifications')).toHaveText('Granted');
 });
+
+// ─── Sheets are not dialogs ──────────────────────────────────────
+
+test('an action sheet is left alone, and the test picks an option with a locator', async ({ screen }) => {
+  const dialogs = recordDialogs(screen, (dialog) => dialog.accept());
+  await pressButton(screen, 'show_action_sheet_button');
+  await screen.getByText(/^red$/i).tap();
+  await expect(alertResult(screen)).toHaveText('Red');
+  expect(dialogs).toHaveLength(0);
+});
+
+test('a bottom sheet is left alone, and the test picks an option with a locator', async ({ screen, platform }) => {
+  test.skip(platform === 'ios', 'bottom sheets are an Android control');
+  const dialogs = recordDialogs(screen, (dialog) => dialog.accept());
+  await pressButton(screen, 'show_bottom_sheet_button');
+  await screen.getByText(/^red$/i).tap();
+  await expect(alertResult(screen)).toHaveText('Red');
+  expect(dialogs).toHaveLength(0);
+});

@@ -325,7 +325,26 @@ function iosLocationPermissionAlert(): ViewNode[] {
   ]);
 }
 
+function iosActionSheet(): ViewNode[] {
+  return [node({ type: 'Application', label: 'Playground' }, [
+    node({ type: 'Other', label: 'PopoverDismissRegion' }),
+    node({ type: 'Sheet', label: 'Choose a Color' }, [
+      node({ type: 'StaticText', label: 'Choose a Color' }),
+      iosButton('Red', 0, 100), iosButton('Green', 0, 150), iosButton('Blue', 0, 200),
+    ]),
+  ])];
+}
+
 test.describe('iOS dialogs', () => {
+  test('an action sheet is not reported', async () => {
+    const device = createFakeDevice(iosActionSheet());
+    const screen = new Screen(device.driver);
+    let events = 0;
+    screen.on('dialog', () => { events++; });
+    expect(await screen.getByText('Red').isVisible()).toBe(true);
+    expect(events).toBe(0);
+  });
+
   test('reads an app confirm alert', async () => {
     const dialog = await firstDialogSeenBy(new Screen(createFakeDevice(iosConfirmAlert()).driver));
     expect(dialog.type()).toBe('confirm');
