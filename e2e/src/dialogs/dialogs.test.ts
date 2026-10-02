@@ -43,17 +43,6 @@ function recordDialogs(screen: Screen, respond: (dialog: Dialog) => Promise<void
   return seen;
 }
 
-// Dialogs are spotted while the screen is polled; poll until `count` dialogs were seen.
-async function waitUntilDialogsSeen(screen: Screen, dialogs: Dialog[], count: number): Promise<void> {
-  const deadline = Date.now() + 5000;
-  while (dialogs.length < count) {
-    if (Date.now() > deadline) {
-      throw new Error(`expected ${count} dialog(s), saw ${dialogs.length}`);
-    }
-    await screen.viewTree();
-  }
-}
-
 test.beforeEach(async ({ device, screen }) => {
   await openPermissionsAndAlertsWithFreshPermissions(device, screen);
 });
@@ -108,9 +97,11 @@ test('accepting the location prompt grants location', async ({ screen }) => {
 });
 
 test('dismissing the camera prompt denies the camera', async ({ screen, platform }) => {
-  const dialogs = recordDialogs(screen, (dialog) => dialog.dismiss());
+  const dialogPromise = screen.waitForEvent('dialog');
   await pressButton(screen, 'request_camera_permission_button');
-  await waitUntilDialogsSeen(screen, dialogs, 1);
+  const dialog = await dialogPromise;
+  expect(dialog.type()).toBe('permission');
+  await dialog.dismiss();
   await expect(screen.getByText(/Don’t allow/i)).toBeHidden();
   await expect(permissionStatus(screen, 'camera')).toHaveText(deniedStatus(platform));
 });

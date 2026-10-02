@@ -47,6 +47,20 @@ On iOS, which button is positive comes from where it sits, following Apple's lay
 
 Use `screen.once('dialog', handler)` to handle only the next dialog, and `screen.off('dialog', handler)` to stop listening.
 
+## Waiting for a dialog
+
+To assert that an action opens a dialog, start waiting before the action, like Playwright's `page.waitForEvent('dialog')`:
+
+```typescript
+const dialogPromise = screen.waitForEvent('dialog');
+await screen.getByText('Scan a code').tap();
+const dialog = await dialogPromise;
+expect(dialog.type()).toBe('permission');
+await dialog.dismiss();
+```
+
+The dialog is left for you to answer. Pass a predicate, or `{ predicate, timeout }`, to wait for a specific one. The default timeout is the action timeout. A device doesn't push dialog events the way a browser does, so `waitForEvent` polls the screen until a dialog shows up.
+
 ## Resetting permissions between runs
 
 Once a permission is granted, or denied twice, Android stops asking. On Android, clear the app's data before the test to get the prompt back:

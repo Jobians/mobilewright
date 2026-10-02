@@ -406,3 +406,50 @@ test.describe('iOS dialogs', () => {
     expect(device.taps).toEqual([centerOfButtonAt(300)]);
   });
 });
+
+// ─── waitForEvent ────────────────────────────────────────────────
+
+function showLater(device: FakeDevice, tree: ViewNode[], ms: number): void {
+  setTimeout(() => device.show(tree), ms);
+}
+
+test.describe('screen.waitForEvent(dialog)', () => {
+  test('resolves with the dialog that opens after the call, polling the screen on its own', async () => {
+    const device = createFakeDevice(appScreenWithButton('Continue'));
+    const screen = new Screen(device.driver, { pollInterval: 10 });
+    const dialogPromise = screen.waitForEvent('dialog');
+    showLater(device, confirmAlert(), 50);
+    const dialog = await dialogPromise;
+    expect(dialog.title()).toBe('Confirm Alert');
+  });
+
+  test('leaves the dialog for the caller to answer', async () => {
+    const device = createFakeDevice(confirmAlert());
+    const screen = new Screen(device.driver, { pollInterval: 10 });
+    const dialog = await screen.waitForEvent('dialog');
+    expect(device.taps).toEqual([]);
+    await dialog.dismiss();
+    expect(device.taps).toEqual([centerOfButtonAt(100)]);
+  });
+
+  test('skips dialogs the predicate rejects', async () => {
+    const device = createFakeDevice(simpleAlert());
+    const screen = new Screen(device.driver, { pollInterval: 10 });
+    const dialogPromise = screen.waitForEvent('dialog', (dialog) => dialog.type() === 'confirm');
+    showLater(device, confirmAlert(), 50);
+    expect((await dialogPromise).title()).toBe('Confirm Alert');
+  });
+
+  test('rejects when no dialog opens within the timeout', async () => {
+    const screen = new Screen(createFakeDevice(appScreenWithButton('Continue')).driver, { pollInterval: 10 });
+    await expect(screen.waitForEvent('dialog', { timeout: 100 })).rejects.toThrow('Timeout 100ms exceeded while waiting for event "dialog"');
+  });
+
+  test('other dialog listeners still see the dialog', async () => {
+    const screen = new Screen(createFakeDevice(confirmAlert()).driver, { pollInterval: 10 });
+    let events = 0;
+    screen.on('dialog', () => { events++; });
+    await screen.waitForEvent('dialog');
+    expect(events).toBe(1);
+  });
+});
