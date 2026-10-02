@@ -8,6 +8,8 @@ export type DialogHandler = (dialog: Dialog) => unknown | Promise<unknown>;
 const ALERT_BUTTON_ID = /^android:id\/button[123]$/;
 const ALERT_TITLE_ID = /:id\/alertTitle$/;
 const ALERT_MESSAGE_ID = 'android:id/message';
+// AlertDialog.setItems(): an action sheet, which the test opened itself and picks an option from with a locator
+const ACTION_SHEET_LIST_ID = /:id\/select_dialog_listview$/;
 // Runtime permission prompt shown by com.android.permissioncontroller (or a vendor fork of it).
 const PERMISSION_MESSAGE_ID = /:id\/permission_message$/;
 const PERMISSION_BUTTON_ID = /:id\/permission_\w+_button$/;
@@ -133,7 +135,7 @@ function findPermissionDialog(nodes: ViewNode[], driver: MobilewrightDriver): Di
 
 function findAlertDialog(nodes: ViewNode[], driver: MobilewrightDriver): Dialog | undefined {
   const buttons = nodes.filter((node) => matchesId(node, ALERT_BUTTON_ID));
-  if (buttons.length === 0) {
+  if (buttons.length === 0 || nodes.some((node) => matchesId(node, ACTION_SHEET_LIST_ID))) {
     return undefined;
   }
   const byId = (id: string) => buttons.find((node) => node.identifier === `android:id/${id}`);
