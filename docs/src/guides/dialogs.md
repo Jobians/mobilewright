@@ -22,6 +22,7 @@ Mobilewright reads the screen many times a second while an action or `expect()` 
 
 - Each dialog fires the event once, not on every poll.
 - Without a listener, dialogs are left alone, so you can still tap their buttons with locators.
+- Action sheets and bottom sheets are not dialogs: your test opened them to pick an option, so pick it with a locator, like `screen.getByText('Red').tap()`.
 - Dialogs are only noticed while an action or assertion is running.
 
 ## Responding

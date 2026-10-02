@@ -53,6 +53,17 @@ function simpleAlert(): ViewNode[] {
   ])];
 }
 
+function listDialogWithCancel(): ViewNode[] {
+  return [node({ identifier: 'android:id/content' }, [
+    node({ type: 'android.widget.TextView', identifier: 'com.example:id/alertTitle', text: 'Choose a Color' }),
+    node({ type: 'android.widget.ListView', identifier: 'com.example:id/select_dialog_listview' }, [
+      node({ type: 'android.widget.TextView', identifier: 'android:id/text1', text: 'Red', y: 100 }),
+      node({ type: 'android.widget.TextView', identifier: 'android:id/text1', text: 'Green', y: 150 }),
+    ]),
+    button('android:id/button2', 'CANCEL', 300),
+  ])];
+}
+
 function promptAlert(okButtonY = 200): ViewNode[] {
   return [node({ identifier: 'android:id/content' }, [
     node({ type: 'android.widget.TextView', identifier: 'com.example:id/alertTitle', text: 'Prompt Alert' }),
@@ -212,6 +223,19 @@ test.describe('screen.on(dialog)', () => {
     screen.on('dialog', (dialog) => dialog.dismiss());
     await screen.getByText('Continue').tap();
     expect(device.taps).toEqual([centerOfButtonAt(100), centerOfButtonAt(900)]);
+  });
+
+  test('an action sheet (a list dialog) is not reported, so a blanket handler leaves it alone', async () => {
+    const device = createFakeDevice(listDialogWithCancel());
+    const screen = new Screen(device.driver);
+    let events = 0;
+    screen.on('dialog', async (dialog) => {
+      events++;
+      await dialog.accept();
+    });
+    expect(await screen.getByText('Red').isVisible()).toBe(true);
+    expect(events).toBe(0);
+    expect(device.taps).toEqual([]);
   });
 
   test('without a listener the dialog is left alone', async () => {
