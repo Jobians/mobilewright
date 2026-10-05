@@ -7,6 +7,23 @@ hide_table_of_contents: true
 
 # Changelog
 
+## [0.0.64] (2026-10-05)
+* Feat: add `locator.check()`, `uncheck()` and `setChecked()` with Playwright semantics ([#379](https://github.com/mobile-next/mobilewright/pull/379))
+* Feat(driver-mobilenext): install apps before allocating a cloud device ([#389](https://github.com/mobile-next/mobilewright/pull/389))
+* Feat(iOS): drive Safari tabs with the webview commands, on real devices and simulators ([mobilecli#490](https://github.com/mobile-next/mobilecli/pull/490))
+* Feat(Android): drive Chrome tabs with the webview commands over CDP ([mobilecli#489](https://github.com/mobile-next/mobilecli/pull/489))
+* Fix: round `doubleTap` and `longPress` coordinates before sending to mobilecli ([#364](https://github.com/mobile-next/mobilewright/pull/364))
+* Fix(cli): `doctor` no longer reports Android devices as missing an agent ([#381](https://github.com/mobile-next/mobilewright/pull/381))
+* Fix(cli): `doctor` gives Linux advice, skips local SDK checks behind a remote ADB server, and no longer fails on Hyper-V or AEHD setups ([#384](https://github.com/mobile-next/mobilewright/pull/384))
+* Fix: match log filters case-insensitively, message as a substring ([mobilecli#483](https://github.com/mobile-next/mobilecli/pull/483))
+* Fix: accept hardware button names case-insensitively ([mobilecli#479](https://github.com/mobile-next/mobilecli/pull/479))
+* Fix(iOS): reset privacy permissions when clearing an app on a simulator ([mobilecli#486](https://github.com/mobile-next/mobilecli/pull/486))
+* Fix(iOS): terminating an app on a simulator reports "process not found" or "not installed" instead of a simctl exit status ([mobilecli#493](https://github.com/mobile-next/mobilecli/pull/493))
+* Fix(iOS): list only the simulator's own crash reports, not the host's ([mobilecli#482](https://github.com/mobile-next/mobilecli/pull/482))
+* Fix(Android): keep the device in touch mode while typing text ([mobilecli#492](https://github.com/mobile-next/mobilecli/pull/492))
+* Fix(Android): report a webview behind another screen as not visible ([mobilecli#488](https://github.com/mobile-next/mobilecli/pull/488))
+* Chore: upgrade bundled mobilecli to 1.0.18 ([#388](https://github.com/mobile-next/mobilewright/pull/388))
+
 ## [0.0.63] (2026-10-01)
 * Feat(driver-mobilenext): `apiKey` defaults to the `MOBILENEXT_API_KEY` environment variable ([#359](https://github.com/mobile-next/mobilewright/pull/359))
 * Feat(iOS): listen on multiple addresses, including IPv6, in `DEVICEKIT_LISTEN_HOST` ([devicekit-ios#92](https://github.com/mobile-next/devicekit-ios/pull/92)), thanks to [@hillct](https://github.com/hillct)
