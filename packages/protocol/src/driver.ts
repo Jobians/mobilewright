@@ -45,6 +45,8 @@ export interface AllocationCriteria {
   deviceType?: DeviceType;
   /** OS version constraint expression, e.g. "17", "26.0" or ">=17 <19". See `parseOsVersion`. */
   osVersion?: string;
+  /** App paths to install. A driver that installs while allocating reports them in `installedApps`; others ignore this. */
+  installApps?: string[];
 }
 
 export interface AllocatedDevice {
@@ -55,6 +57,8 @@ export interface AllocatedDevice {
   model?: string;
   osVersion?: string;
   type?: DeviceType;
+  /** Apps from `criteria.installApps` that the driver installed while allocating. */
+  installedApps?: string[];
 }
 
 export interface WebViewSession {
