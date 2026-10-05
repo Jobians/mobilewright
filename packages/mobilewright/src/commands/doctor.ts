@@ -323,9 +323,21 @@ function checkMobilecli(): CheckResult {
   });
 }
 
-type MobilecliDeviceEntry = { id: string; name: string; state: string };
+type MobilecliDeviceEntry = { id: string; name: string; state: string; platform?: string };
 type MobilecliDevicesResponse = { status: string; data: { devices: MobilecliDeviceEntry[] } };
 type AgentStatusResponse = { status: string; data: { message: string; agent?: { version: string; bundleId: string } } };
+
+/**
+ * One line per online device for the "mobilecli devices" check. Android has
+ * no agent to install, so it is reported as such without asking mobilecli.
+ */
+export function formatDeviceLine(
+  device: { id: string; name: string; platform?: string },
+  lookupAgentStatus: (deviceId: string) => string,
+): string {
+  const agentStatus = device.platform === 'android' ? 'agent: not needed on Android' : lookupAgentStatus(device.id);
+  return `${device.name} (${device.id}) — ${agentStatus}`;
+}
 
 function getAgentStatus(binary: string, deviceId: string): string {
   const output = run(binary, ['agent', 'status', '--device', deviceId]);
@@ -377,10 +389,7 @@ function checkMobilecliDevices(): CheckResult {
       });
     }
 
-    const deviceLines = online.map(d => {
-      const agentStatus = getAgentStatus(binary, d.id);
-      return `${d.name} (${d.id}) — ${agentStatus}`;
-    });
+    const deviceLines = online.map(d => formatDeviceLine(d, (id) => getAgentStatus(binary, id)));
 
     return check('mobilecli_devices', 'mobilecli devices', 'system', 'ok', {
       version: `${online.length} online device${online.length !== 1 ? 's' : ''}`,
