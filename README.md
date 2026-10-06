@@ -15,23 +15,26 @@ Framework for mobile device automation, inspired by Playwright's architecture an
 ## Quick Start
 
 ```bash
-npm install mobilewright
+npm install mobilewright @mobilewright/test
 ```
 
 ```typescript
-import { ios, expect } from 'mobilewright';
+import { test, expect } from '@mobilewright/test';
 
-const device = await ios.launch({ bundleId: 'com.example.myapp' });
-const { screen } = device;
+// The app is launched fresh before the test
+test.use({ bundleId: 'com.example.myapp' });
 
-await screen.getByLabel('Email').fill('user@example.com');
-await screen.getByLabel('Password').fill('password123');
-await screen.getByRole('button', { name: 'Sign In' }).tap();
+test('can sign in', async ({ screen }) => {
+  await screen.getByLabel('Email').fill('user@example.com');
+  await screen.getByLabel('Password').fill('password123');
+  await screen.getByRole('button', { name: 'Sign In' }).tap();
 
-await expect(screen.getByText('Welcome back')).toBeVisible();
-const screenshot = await screen.screenshot();
+  await expect(screen.getByText('Welcome back')).toBeVisible();
+});
+```
 
-await device.close();
+```bash
+npx mobilewright test
 ```
 
 ## Features
