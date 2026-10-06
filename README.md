@@ -10,7 +10,7 @@ Framework for mobile device automation, inspired by Playwright's architecture an
 
 [Get Started](#quick-start) · [API Docs](#api-reference) · [Roadmap](ROADMAP.md) · [Mobile Next Cloud](https://mobilenext.ai/cloud?utm_source=github&utm_medium=readme&utm_campaign=mobilewright&utm_content=hero)
 
-![One Mobilewright test running on an iPhone and an Android phone side by side](docs/src/images/cart-test.gif)
+![One Mobilewright test running on an iPhone and an Android phone side by side](https://raw.githubusercontent.com/mobile-next/mobilewright/main/docs/src/images/cart-test.gif)
 
 ## Quick Start
 
@@ -20,9 +20,6 @@ npm install mobilewright @mobilewright/test
 
 ```typescript
 import { test, expect } from '@mobilewright/test';
-
-// The app is launched fresh before the test
-test.use({ bundleId: 'com.example.myapp' });
 
 test('can sign in', async ({ screen }) => {
   await screen.getByLabel('Email').fill('user@example.com');
