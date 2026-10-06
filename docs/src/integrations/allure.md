@@ -97,7 +97,7 @@ test.describe('Milliways ordering', () => {
     await allure.attachment('Order summary', screenshot, 'image/png');
   });
 
-  test('applies the WELCOME coupon', async ({ screen }) => {
+  test('applies the WELCOME coupon', { tag: '@demo-failure' }, async ({ screen }) => {
     await allure.feature('Ordering');
     await screen.getByText('New Order').tap();
     await screen.getByText('Soup of the Day').tap();
@@ -112,7 +112,7 @@ test.describe('Milliways ordering', () => {
 
 `allure-js-commons` is installed as a dependency of `allure-playwright`, so there is nothing extra to install for the import.
 
-The last test fails on purpose: Milliways does not accept the `WELCOME` coupon, so the final assertion does not hold. It is there to show what a failure looks like in the report.
+The last test fails on purpose: Milliways does not accept the `WELCOME` coupon, so the final assertion does not hold. It is there to show what a failure looks like in the report. It carries the `@demo-failure` tag so the CI example below can leave it out with `--grep-invert`; delete it once you have seen the report.
 
 ### 4. Run the tests
 
@@ -160,9 +160,11 @@ The `error-context` attachment on a failed test is the same Markdown file Mobile
 
 ### Keeping history between runs
 
-The **Trend** chart and the per-test **History** tab are empty on the first run. Allure builds them from a `history/` folder inside the previous report. Copy it into the results directory before generating the next report:
+The **Trend** chart and the per-test **History** tab are empty on the first run. Allure builds them from a `history/` folder inside the previous report. Start the next run with an empty results directory, so results from the previous run are not mixed in as retries, then copy the previous report's history into it before generating:
 
 ```bash
+rm -rf allure-results
+npx mobilewright test
 cp -r allure-report/history allure-results/history
 npx allure generate allure-results --clean -o allure-report
 ```
@@ -180,6 +182,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -205,7 +210,7 @@ jobs:
           xcrun simctl install booted Milliways.app
 
       - name: Run Mobilewright tests
-        run: npx mobilewright test
+        run: npx mobilewright test --grep-invert @demo-failure
 
       - name: Generate Allure report
         if: ${{ !cancelled() }}
@@ -225,12 +230,20 @@ jobs:
 
 A downloaded artifact is fine for a single run but loses the history. To get a report with trends that the whole team can open from a link, publish it somewhere that keeps the previous version around.
 
-**GitHub Pages.** Keep the published reports on a `gh-pages` branch. Before generating, check out that branch and copy the last report's `history/` into `allure-results/`; after generating, push the new report. Replace the generate and upload steps above with:
+**GitHub Pages.** Keep the published reports on a `gh-pages` branch. Before generating, check out that branch and copy the last report's `history/` into `allure-results/`; after generating, push the new report. Pushing needs `contents: write` on the job, which overrides the read-only default set above. Publish only from `push` runs so a pull request cannot replace the shared report. Add the permission to the job and replace the generate and upload steps with:
 
 ```yaml
+  test:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      # ... checkout, setup, install app, run tests as above ...
+
       - name: Fetch previous report history
         if: ${{ !cancelled() }}
         uses: actions/checkout@v4
+        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
@@ -243,14 +256,14 @@ A downloaded artifact is fine for a single run but loses the history. To get a r
           npx allure generate allure-results --clean -o allure-report
 
       - name: Publish to GitHub Pages
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && github.event_name == 'push' }}
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-report
 ```
 
-The report is then available at `https://<org>.github.io/<repo>/`. The `gh-pages` branch does not exist on the first run, so the checkout step fails once; create the branch by hand or add `continue-on-error: true` to that step.
+The report is then available at `https://<org>.github.io/<repo>/`. The `gh-pages` branch does not exist on the first run; `continue-on-error: true` lets that checkout fail without stopping the job, and the publish step creates the branch.
 
 **Amazon S3.** Sync the report to a bucket with static website hosting enabled. Keep one copy per commit and one at a stable path for the latest run:
 
@@ -266,13 +279,13 @@ The report is then available at `https://<org>.github.io/<repo>/`. The `gh-pages
         run: npx allure generate allure-results --clean -o allure-report
 
       - name: Upload to S3
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && github.event_name == 'push' }}
         run: |
           aws s3 sync allure-report s3://my-reports-bucket/allure/runs/${{ github.sha }}
           aws s3 sync allure-report s3://my-reports-bucket/allure/latest --delete
 ```
 
-This needs AWS credentials in the job, for example through `aws-actions/configure-aws-credentials`. The report is a plain static site, so any static host works the same way: the only requirement for trends is that `history/` from the previous report ends up in `allure-results/` before `allure generate` runs.
+This needs AWS credentials in the job, for example through `aws-actions/configure-aws-credentials`; with OIDC that also needs `id-token: write` in the job's `permissions`. The report is a plain static site, so any static host works the same way: the only requirement for trends is that `history/` from the previous report ends up in `allure-results/` before `allure generate` runs.
 
 ## Configuration
 
