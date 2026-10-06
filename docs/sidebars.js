@@ -71,6 +71,7 @@ const sidebars = {
       items: [
         'integrations/datadog',
         'integrations/checkly',
+        'integrations/allure',
       ],
     },
     'changelog',
